@@ -15,4 +15,5 @@ def init_logger() -> None:
     root_dir = get_project_root_dir()
     log_file_path = '{0}{1}logconfig.ini'.format(root_dir, os.sep)
     config.fileConfig(log_file_path)
-    info('Load logging config from: {0}'.format(log_file_path))
+    msg = 'Load logging config from: {0}'.format(log_file_path)
+    info(msg)

@@ -14,8 +14,8 @@ async def get_blob_data(url: str, sess: aiohttp.ClientSession) -> bytes | None:
     try:
         response = await sess.get(url)
     except Exception as ex:
-        logging.error("Can't grab blob: {0}".format(url))
-        logging.exception(ex)
+        msg = "Can't grab blob: {0}".format(url)
+        logging.exception(msg)
         return None
 
     json = await response.json()
@@ -24,10 +24,8 @@ async def get_blob_data(url: str, sess: aiohttp.ClientSession) -> bytes | None:
     encoding = json.get('encoding')
 
     if encoding != 'base64':
-        logging.warning(
-            'get_blob_data. Unsupported encoding: {0}'.
-            format(encoding),
-        )
+        msg = 'get_blob_data. Unsupported encoding: {0}'.format(encoding)
+        logging.warning(msg)
         return None
 
     return base64.b64decode(blob_content)
@@ -41,23 +39,23 @@ async def write_blob_to_file(
 ) -> bool:
     """Write blob data (file) to newly created file."""
     subdir = os.path.dirname(relative_path)
-    filename = os.path.basename(relative_path)
 
     abs_dir = temp_dir
     if subdir:
         abs_dir = temp_dir + os.sep + subdir
-        path = abs_dir + os.sep + filename
+        path = abs_dir + os.sep + os.path.basename(relative_path)
     else:
-        path = temp_dir + os.sep + filename
+        path = temp_dir + os.sep + os.path.basename(relative_path)
 
     if not os.path.exists(abs_dir):
         try:
             os.makedirs(abs_dir, exist_ok=True)
         except Exception as ex:
-            logging.exception(ex)
+            logging.exception('Exception occured')
             return False
 
-    logging.info('Write blob to file: {0}'.format(path))
+    msg = 'Write blob to file: {0}'.format(path)
+    logging.info(msg)
     async with aiofiles.open(path, mode='w+b') as fp:
         await fp.write(blob_data)
 
@@ -74,10 +72,10 @@ def check_mode(ref: dict, page: int) -> bool:
     mode = ref.get('mode')
 
     if mode not in {'100644', '100755'}:
-        logging.info(
-            'Page {0}. Skipping blob. path: {1}, mode: {2}, SHA: {3}'.
-            format(page, path, mode, sha),
-        )
+        s0 = 'Page {0}. Skipping blob. path: {1}'.format(page, path)
+        s1 = ', mode: {0}, SHA: {1}'.format(mode, sha)
+        s0 = '{0}{1}'.format(s0, s1)
+        logging.info(s0)
         return False
     return True
 
@@ -94,4 +92,5 @@ def print_blob_info(ref: dict, page: int) -> None:
         ref.get('size'),
         ref.get('url'),
     )
-    logging.info('{0}{1}'.format(str0, str1))
+    msg = '{0}{1}'.format(str0, str1)
+    logging.info(msg)

@@ -51,7 +51,8 @@ async def process_tree_refs_page(
     page: int,
 ) -> None:
     """Get and parse each ref from the selected page."""
-    logging.info('Processing page: {0}'.format(page))
+    msg = 'Processing page: {0}'.format(page)
+    logging.info(msg)
 
     fl = filter(
         lambda rf: rf.get('type') == 'blob',
@@ -64,7 +65,7 @@ async def process_tree_refs_page(
         except StopIteration:
             break
         except Exception as ex:
-            logging.exception(ex)
+            logging.exception('Exception occurred')
             return
 
         if not check_mode(ref, page):
@@ -93,7 +94,8 @@ async def get_tree_data(
 
     tree_data = json.get('tree')
     if tree_data is None:
-        logging.error("Page {0}. \'tree\' not found".format(page))
+        msg = "Page {0}. \'tree\' not found".format(page)
+        logging.error(msg)
         return {}
     return tree_data
 
@@ -105,8 +107,6 @@ async def get_tree_refs_page(
     urlp: GiteaUrlParams,
 ) -> dict | None:
     """Get paginated refs' data from selected page."""
-    recursive_str = 'true' if urlp.recursive else 'false'
-
     str0 = '{0}/repos/{1}/{2}/git/trees/{3}'.format(
         urlp.base_api_url,
         urlp.owner,
@@ -114,18 +114,19 @@ async def get_tree_refs_page(
         sha,
     )
     str1 = '?recursive={0}&page={1}&per_page={2}'.format(
-        recursive_str,
+        'true' if urlp.recursive else 'false',
         page,
         urlp.refs_per_page,
     )
     url = '{0}{1}'.format(str0, str1)
-    logging.info('GET tree from {0}'.format(url))
+    msg = 'GET tree from {0}'.format(url)
+    logging.info(msg)
 
     try:
         response = await sess.get(url)
     except Exception as ex:
-        logging.error("Can\'t grab page: {0}".format(page))
-        logging.exception(ex)
+        msg = "Can\'t grab page: {0}".format(page)
+        logging.exception(msg)
         return None
 
     return await response.json()
@@ -153,5 +154,5 @@ async def get_tree_refs_pages_count(
         if total_count % urlp.refs_per_page != 0:
             pages_count += 1
 
-    logging.info('Pages count: {0}'.format(pages_count))
+    logging.info('Pages count: {pc}', extra={'pc': pages_count})
     return pages_count

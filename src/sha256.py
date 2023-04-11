@@ -46,8 +46,10 @@ def calc_sha256(file_path: str, block_size: int = 4096) -> str:
 
 def calc_sha_for_files_in_dir(directory: str) -> None:
     """Calculate SHA256 checksum for each file in directory recursively."""
-    logging.info('Calculation of hashes for directory: {0}'.format(directory))
+    msg = 'Calculation of hashes for directory: {0}'.format(directory)
+    logging.info(msg)
 
     for file_path in get_files_recursive(directory):
         sha = calc_sha256(file_path)
-        logging.info('File: {0}. SHA256: {1}'.format(file_path, sha))
+        msg = 'File: {0}. SHA256: {1}'.format(file_path, sha)
+        logging.info(msg)

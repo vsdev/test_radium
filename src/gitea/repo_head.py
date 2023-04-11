@@ -10,7 +10,7 @@ from gitea.url_params import GiteaUrlParams
 async def get_head_sha(
     sess: aiohttp.ClientSession,
     urlp: GiteaUrlParams,
-    ref=REF_HEAD,
+    ref: str = REF_HEAD,
 ) -> str:
     """Get SHA for selected ref (HEAD) of the gitea repository."""
     url = '{0}/repos/{1}/{2}/git/refs'.format(
@@ -18,12 +18,13 @@ async def get_head_sha(
         urlp.owner,
         urlp.project,
     )
-    logging.info('GET refs from {0}'.format(url))
+    msg = 'GET refs from {0}'.format(url)
+    logging.info(msg)
 
     try:
         response = await sess.get(url)
     except Exception as ex:
-        logging.exception(ex)
+        logging.exception('Exception occurred')
         return ''
 
     json = await response.json()
@@ -37,15 +38,17 @@ def parse_sha(json: dict, ref_to_find: str) -> str:
     try:
         ref = next(fl)
     except StopIteration:
-        logging.error('parse_sha: {0} not found'.format(ref_to_find))
+        msg = 'parse_sha: {0} not found'.format(ref_to_find)
+        logging.error(msg)
         return sha
 
     except Exception as ex:
-        logging.exception(ex)
+        logging.exception('Exception occurred')
         return sha
 
     ob = ref.get('object')
     sha = ob.get('sha')
-    logging.info('HEAD SHA {0}'.format(sha))
+    msg = 'HEAD SHA {0}'.format(sha)
+    logging.info(msg)
 
     return sha
