@@ -6,8 +6,17 @@ multi_line_output = 3
 include_trailing_comma = true
 use_parentheses = true
 
+[tool.poetry]
+name = "test_radium"
+version = "1.0.0"
+description = ""
+authors = ["vsdev <vsworkbase@gmail.com>"]
+
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
+aiohttp = "^3.8.4"
+aiofiles = "^23.1.0"
+isort = "^5.12.0"
 
 [tool.pytest.ini_options]
 testpaths = [ "tests",]
