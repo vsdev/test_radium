@@ -10,7 +10,13 @@ import aiohttp
 
 
 async def get_blob_data(url: str, sess: aiohttp.ClientSession) -> bytes | None:
-    """Get blob from URL and get bytes decoded from base64 format."""
+    r"""Get blob from URL and get bytes decoded from base64 format.
+
+    :param url: GET response from URL contains blob's data into
+        \'contents\' field encoded in base64.
+    :param sess: Active session object
+    :returns: decoded contents of blob
+    """
     try:
         response = await sess.get(url)
     except Exception as ex:
@@ -37,7 +43,15 @@ async def write_blob_to_file(
     temp_dir: str,
     is_executable: bool,
 ) -> bool:
-    """Write blob data (file) to newly created file."""
+    """Write blob data (file) to newly created file.
+
+    :param blob_data: Data from blob decoded from base64 format.
+    :param relative_path: Relative path to file in the repository.
+        Directory will be created if not exist before call of this func.
+    :param temp_dir: Temp directory root. Absolute path.
+    :param is_executable: chmod +x will be invoked if True
+    :returns: True if no exceptions
+    """
     subdir = os.path.dirname(relative_path)
 
     abs_dir = temp_dir
@@ -66,12 +80,20 @@ async def write_blob_to_file(
 
 
 def check_mode(ref: dict, page: int) -> bool:
-    """Check blob mode and ignore symbolic link."""
+    """Check blob mode and ignore symbolic link.
+
+    :param ref: JSON dict contains information about blob.
+    :param page: Page number (paginated reading of the git refs tree)
+        for log output.
+    :returns: True if blob mode is 100644 or 100664 (non-executable,
+        group writable), 100755(executable).
+        False for 120000 (symbolic link) and other types.
+    """
     path = ref.get('path')
     sha = ref.get('sha')
     mode = ref.get('mode')
 
-    if mode not in {'100644', '100755'}:
+    if mode not in {'100644', '100664', '100755'}:
         s0 = 'Page {0}. Skipping blob. path: {1}'.format(page, path)
         s1 = ', mode: {0}, SHA: {1}'.format(mode, sha)
         s0 = '{0}{1}'.format(s0, s1)
@@ -81,7 +103,12 @@ def check_mode(ref: dict, page: int) -> bool:
 
 
 def print_blob_info(ref: dict, page: int) -> None:
-    """Print blob information to log."""
+    """Print blob information to log.
+
+    :param ref: JSON dict contains information about blob.
+    :param page: Page number (paginated reading of the git refs tree)
+        for log output.
+    """
     str0 = 'Page {0}. Processing blob. path: {1}, mode: {2}, '.format(
         page,
         ref.get('path'),

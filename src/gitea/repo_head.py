@@ -7,12 +7,18 @@ from gitea.config import REF_HEAD
 from gitea.url_params import GiteaUrlParams
 
 
-async def get_head_sha(
+async def get_ref_sha(
     sess: aiohttp.ClientSession,
     urlp: GiteaUrlParams,
     ref: str = REF_HEAD,
 ) -> str:
-    """Get SHA for selected ref (HEAD) of the gitea repository."""
+    """Get SHA for selected ref (HEAD) of the gitea repository.
+
+    :param sess: Active session.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :param ref: Name of ref. For example refs/heads/master.
+    :returns: SHA of the ref or an empty string if ref not found
+    """
     url = '{0}/repos/{1}/{2}/git/refs'.format(
         urlp.base_api_url,
         urlp.owner,
@@ -28,11 +34,16 @@ async def get_head_sha(
         return ''
 
     json = await response.json()
-    return parse_sha(json, ref)
+    return parse_ref(json, ref)
 
 
-def parse_sha(json: dict, ref_to_find: str) -> str:
-    """Parse JSON array of refs for specific ref name."""
+def parse_ref(json: dict, ref_to_find: str) -> str:
+    """Parse JSON array of refs for specific ref name.
+
+    :param json: JSON dict with all refs of repo.
+    :param ref_to_find: Name of the ref
+    :returns: SHA of the ref or an empty string if ref not found
+    """
     sha = ''
     fl = filter(lambda el: el.get('ref') == ref_to_find, json)
     try:

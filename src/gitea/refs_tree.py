@@ -22,7 +22,19 @@ async def process_tree_refs_pages(
     temp_dir: str,
     num_parallel: int = PARALLEL_DOWNLOADS,
 ) -> None:
-    """Get refs tree (paginated) from gitea and parse each ref."""
+    """GET information (paginated) for HEAD or selected ref.
+
+    GET ref tree info from gitea repository and parse each ref file entry.
+    Decode blobs for files and restore directory structure.
+    Load each file to corresponding subdirectory in the temp
+    directory.
+
+    :param sha: SHA of the HEAD or another ref to parse.
+    :param sess: Active session.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :param temp_dir: Temporary directory for files loading.
+    :param num_parallel: Number of async aiohttp requests and tasks.
+    """
     pages_count = await get_tree_refs_pages_count(sha, sess, urlp)
     if pages_count == 0:
         raise ValueError('pages count == 0')
@@ -50,7 +62,16 @@ async def process_tree_refs_page(
     urlp: GiteaUrlParams,
     page: int,
 ) -> None:
-    """Get and parse each ref from the selected page."""
+    r"""Parse each ref with type \'blob\' from the selected page.
+
+    Each blob data grabbed from remote and saved to disk with relative
+    path from remote.
+    :param sha: SHA of the HEAD or another ref to parse.
+    :param sess: Active session.
+    :param temp_dir: Temporary directory for files loading.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :param page: Page number for paginated request
+    """
     msg = 'Processing page: {0}'.format(page)
     logging.info(msg)
 
@@ -87,7 +108,14 @@ async def get_tree_data(
     urlp: GiteaUrlParams,
     page: int,
 ) -> dict:
-    """Get tree JSON dict from response or empty dict."""
+    """GET JSON dict for blobs and trees (paginated) from top-level tree.
+
+    :param sha: SHA of the HEAD or another ref to parse.
+    :param sess: Active session.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :param page: Page number for paginated request
+    :returns: JSON dict for blobs and trees for page.
+    """
     json = await get_tree_refs_page(sha, page, sess, urlp)
     if json is None:
         return {}
@@ -106,7 +134,14 @@ async def get_tree_refs_page(
     sess: aiohttp.ClientSession,
     urlp: GiteaUrlParams,
 ) -> dict | None:
-    """Get paginated refs' data from selected page."""
+    """GET top-level tree object page data.
+
+    :param sha: SHA of the HEAD or another ref to parse.
+    :param page: Page number for paginated request
+    :param sess: Active session.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :returns: JSON dict for blobs and trees (paginated).
+    """
     str0 = '{0}/repos/{1}/{2}/git/trees/{3}'.format(
         urlp.base_api_url,
         urlp.owner,
@@ -137,7 +172,13 @@ async def get_tree_refs_pages_count(
     sess: aiohttp.ClientSession,
     urlp: GiteaUrlParams,
 ) -> int:
-    """Get number of pages for tree."""
+    """Get number of pages for ref.
+
+    :param sha: SHA of the HEAD or another ref to parse.
+    :param sess: Active session.
+    :param urlp: Base URL parameters for repository (pagination etc.).
+    :returns: Number of pages to parse.
+    """
     json = await get_tree_refs_page(sha, 1, sess, urlp)
     if json is None:
         return 0

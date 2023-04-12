@@ -8,7 +8,7 @@ import aiohttp
 
 import log
 from gitea.refs_tree import process_tree_refs_pages
-from gitea.repo_head import get_head_sha
+from gitea.repo_head import get_ref_sha
 from gitea.url_params import GiteaUrlParams
 from sha256 import calc_sha_for_files_in_dir
 
@@ -24,7 +24,7 @@ async def main() -> None:
     }
 
     async with aiohttp.ClientSession(headers=headers) as sess:
-        head_sha = await get_head_sha(sess, url_params)
+        head_sha = await get_ref_sha(sess, url_params)
         if not len(head_sha):
             return
 

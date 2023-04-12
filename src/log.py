@@ -4,7 +4,10 @@ from logging import config, info
 
 
 def get_project_root_dir() -> str:
-    """Return root dir of the project."""
+    """Return root dir of the project.
+
+    :returns: Project's working directory.
+    """
     path_to = os.path.abspath(__file__)
     dirname = os.path.dirname(path_to)
     return dirname.replace('{0}src'.format(os.sep), '')
