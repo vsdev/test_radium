@@ -1,3 +1,4 @@
+"""Test log functions."""
 import logging
 from pathlib import Path
 
