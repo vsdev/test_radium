@@ -1,5 +1,6 @@
 """Functions for parsing the HEAD or another ref through gitea REST API."""
 import logging
+from http import HTTPStatus
 
 import aiohttp
 
@@ -31,7 +32,12 @@ async def get_ref_sha(
         response = await sess.get(url)
     except Exception as ex:
         logging.exception('Exception occurred')
-        return ''
+        raise ex
+
+    if response.status != HTTPStatus.OK:
+        msg = "Response status: {0}".format(response.status)
+        logging.error(msg)
+        return None
 
     json = await response.json()
     return parse_ref(json, ref)
@@ -51,10 +57,6 @@ def parse_ref(json: dict, ref_to_find: str) -> str:
     except StopIteration:
         msg = 'parse_sha: {0} not found'.format(ref_to_find)
         logging.error(msg)
-        return sha
-
-    except Exception as ex:
-        logging.exception('Exception occurred')
         return sha
 
     ob = ref.get('object')
