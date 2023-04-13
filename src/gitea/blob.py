@@ -4,6 +4,7 @@ import base64
 import logging
 import os
 import stat
+from http import HTTPStatus
 
 import aiofiles
 import aiohttp
@@ -22,6 +23,11 @@ async def get_blob_data(url: str, sess: aiohttp.ClientSession) -> bytes | None:
     except Exception as ex:
         msg = "Can't grab blob: {0}".format(url)
         logging.exception(msg)
+        raise ex
+
+    if response.status != HTTPStatus.OK:
+        msg = "Response status: {0}".format(response.status)
+        logging.error(msg)
         return None
 
     json = await response.json()
@@ -31,7 +37,7 @@ async def get_blob_data(url: str, sess: aiohttp.ClientSession) -> bytes | None:
 
     if encoding != 'base64':
         msg = 'get_blob_data. Unsupported encoding: {0}'.format(encoding)
-        logging.warning(msg)
+        logging.error(msg)
         return None
 
     return base64.b64decode(blob_content)
