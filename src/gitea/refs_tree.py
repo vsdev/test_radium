@@ -36,8 +36,6 @@ async def process_tree_refs_pages(
     :param num_parallel: Number of async aiohttp requests and tasks.
     """
     pages_count = await get_tree_refs_pages_count(sha, sess, urlp)
-    if pages_count == 0:
-        raise ValueError('pages count == 0')
 
     i0 = 1
     while i0 <= pages_count:
@@ -85,21 +83,15 @@ async def process_tree_refs_page(
             ref = next(fl)
         except StopIteration:
             break
-        except Exception as ex:
-            logging.exception('Exception occurred')
-            return
+        if check_mode(ref, page):
+            print_blob_info(ref, page)
 
-        if not check_mode(ref, page):
-            continue
-
-        print_blob_info(ref, page)
-
-        await write_blob_to_file(
-            await get_blob_data(ref.get('url'), sess),
-            ref.get('path'),
-            temp_dir,
-            is_executable=ref.get('mode') == '100755',
-        )
+            await write_blob_to_file(
+                await get_blob_data(ref.get('url'), sess),
+                ref.get('path'),
+                temp_dir,
+                is_executable=ref.get('mode') == '100755',
+            )
 
 
 async def get_tree_data(
@@ -120,12 +112,7 @@ async def get_tree_data(
     if json is None:
         return {}
 
-    tree_data = json.get('tree')
-    if tree_data is None:
-        msg = "Page {0}. \'tree\' not found".format(page)
-        logging.error(msg)
-        return {}
-    return tree_data
+    return json.get('tree')
 
 
 async def get_tree_refs_page(
@@ -184,7 +171,7 @@ async def get_tree_refs_pages_count(
         return 0
 
     total_count = json.get('total_count')
-    if total_count is None:
+    if total_count is None or total_count == 0:
         logging.error('total_count not found')
         return 0
 
