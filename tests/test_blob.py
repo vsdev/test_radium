@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import os
+import shutil
 import tempfile
 from http import HTTPStatus
 
@@ -52,30 +53,36 @@ def get_sha_from_bytes(bt: bytes) -> str:
     return test_hash.hexdigest()
 
 
+WRITE_FILES = ('1{0}blob'.format(os.sep), 'blob2')
+BLOB_FILE_SIZE: int = 8192
+TEST_BLOB_BYTES: bytes = os.urandom(BLOB_FILE_SIZE)
+
+
 @pytest.mark.asyncio()
 async def test_write_blob_to_file(file_size: int = 8192):
-    test_bytes: bytes = os.urandom(file_size)
-    relative_path: str = '|sd443fs435ks23eds|324324fds|blob'
-    relative_path = relative_path.replace('|', os.sep)
-    absolute_path = '{0}{1}'.format(tempfile.tempdir, relative_path)
+    root_dir = tempfile.mkdtemp()
 
-    if os.path.exists(absolute_path):
-        os.remove(absolute_path)
+    for blob_path in WRITE_FILES:
+        absolute_path = (root_dir + os.sep + blob_path)
 
-    assert await blob.write_blob_to_file(
-        test_bytes,
-        relative_path,
-        tempfile.tempdir,
-        is_executable=True,
-    )
+        assert await blob.write_blob_to_file(
+            TEST_BLOB_BYTES,
+            relative_path=blob_path,
+            temp_dir=root_dir,
+            is_executable=True,
+        )
 
-    assert os.path.exists(absolute_path)
-    assert os.path.isfile(absolute_path)
-    assert os.access(absolute_path, os.X_OK)
+        assert os.path.exists(absolute_path)
+        assert os.path.isfile(absolute_path)
+        assert os.access(absolute_path, os.X_OK)
 
-    async with aiofiles.open(absolute_path, mode='rb') as fp:
-        bytes1 = await fp.read()
-        assert get_sha_from_bytes(bytes1) == get_sha_from_bytes(test_bytes)
+        async with aiofiles.open(absolute_path, mode='rb') as fp:
+            bytes1 = await fp.read()
+            assert get_sha_from_bytes(bytes1) == get_sha_from_bytes(
+                TEST_BLOB_BYTES,
+            )
+
+    shutil.rmtree(root_dir)
 
 
 TEST_BLOB_URL = (

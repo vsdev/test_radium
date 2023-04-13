@@ -68,11 +68,7 @@ async def write_blob_to_file(
         path = temp_dir + os.sep + os.path.basename(relative_path)
 
     if not os.path.exists(abs_dir):
-        try:
-            os.makedirs(abs_dir, exist_ok=True)
-        except Exception as ex:
-            logging.exception('Exception occured')
-            return False
+        os.makedirs(abs_dir, exist_ok=True)
 
     msg = 'Write blob to file: {0}'.format(path)
     logging.info(msg)
